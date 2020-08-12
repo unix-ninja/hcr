@@ -191,24 +191,6 @@ for plain in sys.stdin:
       pos = int(rules[idx])
       buf = plain[-pos:]
       plain = plain + buf
-    elif rule == '*':
-      pass
-    elif rule == '*':
-      pass
-    elif rule == '*':
-      pass
-    elif rule == '*':
-      pass
-    elif rule == '*':
-      pass
-    elif rule == '*':
-      pass
-    elif rule == '*':
-      pass
-    elif rule == '*':
-      pass
-    elif rule == '*':
-      pass
     else:
       print ('Err: bad rule "%s".' % rule )
       sys.exit(1)
