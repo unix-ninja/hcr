@@ -1,0 +1,217 @@
+#!/usr/bin/python3
+## written by unix-ninja
+
+import argparse
+import sys
+
+############################################################
+## Parse options
+
+parser = argparse.ArgumentParser(description='Hashcat Rules processor')
+parser.add_argument('-d', dest='debug', action='store_true', help='enable debugging')
+parser.add_argument('rule', type=str, nargs=1, help='rule')
+args = parser.parse_args()
+
+############################################################
+## Main App
+
+rules = args.rule[0]
+
+for plain in sys.stdin:
+  plain = plain.rstrip()
+  idx = 0
+  while idx < len(rules):
+    rule = rules[idx]
+    if rule == ':':
+      pass
+    elif rule == 'l':
+      plain = plain.lower()
+    elif rule == 'u':
+      plain = plain.upper()
+    elif rule == 'c':
+      plain = plain.lower()
+      plain = plain.capitalize()
+    elif rule == 'C':
+      plain = plain[0].lower() + plain[1:].upper()
+      pass
+    elif rule == 't':
+      plain = ''.join(c.lower() if c.isupper() else c.upper() for c in plain)
+    elif rule == 'T':
+      idx += 1
+      pos = int(rules[idx])
+      plain = plain[:pos] + ''.join(c.lower() if c.isupper() else c.upper() for c in plain[pos]) + plain[pos+1:]
+    elif rule == 'r':
+      plain = plain[::-1]
+    elif rule == 'd':
+      plain = plain + plain
+    elif rule == 'p':
+      buf = plain
+      idx += 1
+      itr = int(rules[idx])
+      for i in range(itr):
+        plain = plain + buf
+    elif rule == 'f':
+      plain = plain + plain[::-1]
+    elif rule == '{':
+      plain = plain[1:] + plain[0]
+    elif rule == '}':
+      plain = plain[-1] + plain[0:-1]
+    elif rule == '$':
+      idx += 1
+      c = rules[idx]
+      plain = plain + c
+    elif rule == '^':
+      idx += 1
+      c = rules[idx]
+      plain = c + plain
+    elif rule == '[':
+      plain = plain[1:]
+    elif rule == ']':
+      plain = plain[:-1]
+    elif rule == 'D':
+      idx += 1
+      pos = int(rules[idx])
+      plain = plain[:pos] + plain[pos+1:]
+      pass
+    elif rule == 'x':
+      idx += 1
+      pos = int(rules[idx])
+      idx += 1
+      count = int(rules[idx])
+      plain = plain[pos:count]
+    elif rule == 'O':
+      idx += 1
+      pos = int(rules[idx])
+      idx += 1
+      count = int(rules[idx])
+      plain = plain[0:pos] + plain[pos+count:]
+    elif rule == 'i':
+      idx += 1
+      pos = int(rules[idx])
+      idx += 1
+      c = str(rules[idx])
+      plain = plain[0:pos] + c + plain[pos:]
+    elif rule == 'o':
+      idx += 1
+      pos = int(rules[idx])
+      idx += 1
+      c = str(rules[idx])
+      plain = plain[0:pos] + c + plain[pos+1:]
+    elif rule == "'":
+      idx += 1
+      pos = int(rules[idx])
+      plain = plain[:pos]
+    elif rule == 's':
+      idx += 1
+      x = str(rules[idx])
+      idx += 1
+      y = str(rules[idx])
+      plain = plain.replace(x,y)
+    elif rule == '@':
+      idx += 1
+      x = str(rules[idx])
+      plain = plain.replace(x, '')
+    elif rule == 'z':
+      buf = plain
+      idx += 1
+      itr = int(rules[idx])
+      c = plain[0:1]
+      for i in range(itr):
+        plain = c + plain
+    elif rule == 'Z':
+      buf = plain
+      idx += 1
+      itr = int(rules[idx])
+      c = plain[-1:]
+      for i in range(itr):
+        plain = plain + c
+    elif rule == 'q':
+      buf = ''
+      for c in list(plain):
+        buf += c + c
+      plain = buf
+    elif rule == 'k':
+      plain = plain[1] + plain[0] + plain [2:]
+    elif rule == 'K':
+      plain = plain[:-2] + plain[-1] + plain[-2]
+    elif rule == '*':
+      buf = list(plain)
+      idx += 1
+      pos1 = int(rules[idx])
+      idx += 1
+      pos2 = int(rules[idx])
+      x = plain[pos1]
+      y = plain[pos2]
+      buf[pos1] = y
+      buf[pos2] = x
+      plain = ''.join(buf)
+    elif rule == 'L':
+      buf = list(plain)
+      idx += 1
+      pos = int(rules[idx])
+      buf[pos] = chr(int(ord(buf[pos])) << 1)
+      plain = ''.join(buf)
+    elif rule == 'R':
+      buf = list(plain)
+      idx += 1
+      pos = int(rules[idx])
+      buf[pos] = chr(int(ord(buf[pos])) >> 1)
+      plain = ''.join(buf)
+    elif rule == '+':
+      buf = list(plain)
+      idx += 1
+      pos = int(rules[idx])
+      buf[pos] = chr(int(ord(buf[pos])) + 1)
+      plain = ''.join(buf)
+    elif rule == '-':
+      buf = list(plain)
+      idx += 1
+      pos = int(rules[idx])
+      buf[pos] = chr(int(ord(buf[pos])) - 1)
+      plain = ''.join(buf)
+    elif rule == '.':
+      buf = list(plain)
+      idx += 1
+      pos = int(rules[idx])
+      buf[pos] = buf[pos+1]
+      plain = ''.join(buf)
+    elif rule == ',':
+      buf = list(plain)
+      idx += 1
+      pos = int(rules[idx])
+      buf[pos] = buf[pos-1]
+      plain = ''.join(buf)
+    elif rule == 'y':
+      idx += 1
+      pos = int(rules[idx])
+      buf = plain[0:pos]
+      plain = buf + plain
+    elif rule == 'Y':
+      idx += 1
+      pos = int(rules[idx])
+      buf = plain[-pos:]
+      plain = plain + buf
+    elif rule == '*':
+      pass
+    elif rule == '*':
+      pass
+    elif rule == '*':
+      pass
+    elif rule == '*':
+      pass
+    elif rule == '*':
+      pass
+    elif rule == '*':
+      pass
+    elif rule == '*':
+      pass
+    elif rule == '*':
+      pass
+    elif rule == '*':
+      pass
+    else:
+      print ('Err: bad rule "%s".' % rule )
+      sys.exit(1)
+    idx += 1
+  print (plain)
+
