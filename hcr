@@ -9,15 +9,16 @@ import sys
 
 parser = argparse.ArgumentParser(description='Hashcat Rules processor')
 parser.add_argument('-d', dest='debug', action='store_true', help='enable debugging')
-parser.add_argument('rule', type=str, nargs=1, help='rule')
+parser.add_argument('rules', type=str, nargs='?', help='rule')
+parser.add_argument('-r', dest='rule_file', type=str, help='specify a rule file to use')
+parser.add_argument('-w', dest='wordlist', type=str, help='specify a wordlist to apply rules to')
 args = parser.parse_args()
 
 ############################################################
-## Main App
+## Functions
 
-rules = args.rule[0]
-
-for plain in sys.stdin:
+## This will apply the rules
+def transform(plain, rules):
   plain = plain.rstrip()
   idx = 0
   while idx < len(rules):
@@ -199,3 +200,36 @@ for plain in sys.stdin:
     idx += 1
   print (plain)
 
+def run_rules(plain):
+  ## check if we are using  a rule file
+  if args.rule_file:
+    with open(args.rule_file) as rule_file:
+      for rules in rule_file:
+        rules = rules.rstrip()
+        if rules:
+          transform(plain, rules)
+  ## Use stdin otherwise
+  else:
+    transform(plain, args.rules)
+
+############################################################
+## Main App
+
+## we must specify either a rule file or a set of rules
+if (not args.rules and not args.rule_file):
+  print ('Err: You must specify rules or rule file.')
+  sys.exit(2)
+
+if args.wordlist:
+  ## use a wordlist if we have one
+  with open(args.wordlist) as wordlist:
+    for plain in wordlist:
+      plain = plain.rstrip()
+      if plain:
+        run_rules(plain)
+else:
+  ## use stdin if there's no wordlist
+  for plain in sys.stdin:
+    plain = plain.rstrip()
+    if plain:
+      run_rules(plain)
