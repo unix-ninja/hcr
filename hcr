@@ -10,6 +10,7 @@ import sys
 parser = argparse.ArgumentParser(description='Hashcat Rules processor')
 parser.add_argument('-d', dest='debug', action='store_true', help='enable debugging')
 parser.add_argument('rules', type=str, nargs='?', help='rule')
+parser.add_argument('-i', dest='interactive', action='store_true', help='use an interactive console')
 parser.add_argument('-r', dest='rule_file', type=str, help='specify a rule file to use')
 parser.add_argument('-w', dest='wordlist', type=str, help='specify a wordlist to apply rules to')
 args = parser.parse_args()
@@ -212,21 +213,76 @@ def run_rules(plain):
   else:
     transform(plain, args.rules)
 
+def use_wordlist(wordlist):
+  with open(wordlist) as wordlist:
+    for plain in wordlist:
+      plain = plain.rstrip()
+      if plain:
+        run_rules(plain)
+
+def console_help():
+  print ("exit                     quit hcr")
+  print ("p  |  plain <string>     use the specified plain in tests")
+  print ("w  |  wordlist <file>    use a file for plains in tests")
+  print ("r  |  rules <rules>      test candidate rules")
+  print ("rf |  rulefile <file>    use a file to test candidate rules")
+
+def console():
+  ## set a default plain
+  plain = 'p@ssW0rd'
+  wordlist = None
+  prompt = 'hcr> '
+  print ("Interactive console. Type '?' for help")
+  while True:
+    ## deal with prompt stuff
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+    line = sys.stdin.readline().strip()
+    ## set the first word of inpiut as our command
+    cmd = line.split()[0]
+    ## cmd_arg will be our local storage, args is still global
+    cmd_arg = line[len(cmd):].strip()
+    ## process our commands
+    if cmd == '?':
+      console_help()
+    elif cmd == 'p' or cmd == 'plain':
+      plain = cmd_arg
+      wordlist = None
+    elif cmd == 'w' or cmd == 'wordlist':
+      wordlist = cmd_arg
+      plain = None
+    elif cmd == 'r' or cmd == 'rules':
+      args.rule_file = None
+      args.rules = cmd_arg
+      if wordlist:
+        use_wordlist(wordlist)
+      else:
+        run_rules(plain)
+    elif cmd == 'rf' or cmd == 'rulefile':
+      args.rule_file = cmd_arg
+      args.rules = None
+      if wordlist:
+        use_wordlist(wordlist)
+      else:
+        run_rules(plain)
+    elif cmd == 'exit':
+      sys.exit(0)
+
 ############################################################
 ## Main App
 
-## we must specify either a rule file or a set of rules
+if args.interactive:
+  console()
+  sys.exit(0)
+
+## if we aren't interactive we must specify either a rule file or a set of rules
 if (not args.rules and not args.rule_file):
   print ('Err: You must specify rules or rule file.')
   sys.exit(2)
 
 if args.wordlist:
   ## use a wordlist if we have one
-  with open(args.wordlist) as wordlist:
-    for plain in wordlist:
-      plain = plain.rstrip()
-      if plain:
-        run_rules(plain)
+  use_wordlist(args.wordlist)
 else:
   ## use stdin if there's no wordlist
   for plain in sys.stdin:
