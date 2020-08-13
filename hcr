@@ -24,6 +24,8 @@ for plain in sys.stdin:
     rule = rules[idx]
     if rule == ':':
       pass
+    elif rule == ' ':
+      pass
     elif rule == 'l':
       plain = plain.lower()
     elif rule == 'u':
