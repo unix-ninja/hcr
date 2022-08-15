@@ -21,6 +21,7 @@ args = parser.parse_args()
 ## This will apply the rules
 def transform(plain, rules):
   plain = plain.rstrip()
+  memorize = ""
   idx = 0
   while idx < len(rules):
     rule = rules[idx]
@@ -28,6 +29,12 @@ def transform(plain, rules):
       pass
     elif rule == ' ':
       pass
+    elif rule == 'M':
+      memorize = plain
+    elif rule == '4':
+      plain += memorize
+    elif rule == '6':
+      plain = memorize + plain
     elif rule == 'l':
       plain = plain.lower()
     elif rule == 'u':
@@ -36,14 +43,18 @@ def transform(plain, rules):
       plain = plain.lower()
       plain = plain.capitalize()
     elif rule == 'C':
-      plain = plain[0].lower() + plain[1:].upper()
+      if len(plain) > 1:
+        plain = plain[0].lower() + plain[1:].upper()
+      elif len(plain) == 1:
+        plain = plain[0].lower()
       pass
     elif rule == 't':
       plain = ''.join(c.lower() if c.isupper() else c.upper() for c in plain)
     elif rule == 'T':
       idx += 1
-      pos = int(rules[idx])
-      plain = plain[:pos] + ''.join(c.lower() if c.isupper() else c.upper() for c in plain[pos]) + plain[pos+1:]
+      pos = int(rules[idx], 16)
+      if pos < len(plain):
+        plain = plain[:pos] + ''.join(c.lower() if c.isupper() else c.upper() for c in plain[pos]) + plain[pos+1:]
     elif rule == 'r':
       plain = plain[::-1]
     elif rule == 'd':
@@ -57,9 +68,11 @@ def transform(plain, rules):
     elif rule == 'f':
       plain = plain + plain[::-1]
     elif rule == '{':
-      plain = plain[1:] + plain[0]
+      if len(plain) > 2:
+        plain = plain[1:] + plain[0]
     elif rule == '}':
-      plain = plain[-1] + plain[0:-1]
+      if len(plain) > 2:
+        plain = plain[-1] + plain[0:-1]
     elif rule == '$':
       idx += 1
       c = rules[idx]
@@ -74,9 +87,12 @@ def transform(plain, rules):
       plain = plain[:-1]
     elif rule == 'D':
       idx += 1
-      pos = int(rules[idx])
-      plain = plain[:pos] + plain[pos+1:]
-      pass
+      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
+        pos = ord(rules[idx])-55
+      else:
+        pos = int(rules[idx])
+      if pos < len(plain):
+        plain = plain[:pos] + plain[pos+1:]
     elif rule == 'x':
       idx += 1
       pos = int(rules[idx])
@@ -85,25 +101,31 @@ def transform(plain, rules):
       plain = plain[pos:count]
     elif rule == 'O':
       idx += 1
-      pos = int(rules[idx])
+      pos = int(rules[idx], 16)
       idx += 1
-      count = int(rules[idx])
+      count = int(rules[idx], 16)
       plain = plain[0:pos] + plain[pos+count:]
     elif rule == 'i':
       idx += 1
-      pos = int(rules[idx])
+      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
+        pos = ord(rules[idx])-55
+      else:
+        pos = int(rules[idx])
       idx += 1
       c = str(rules[idx])
       plain = plain[0:pos] + c + plain[pos:]
     elif rule == 'o':
       idx += 1
-      pos = int(rules[idx])
+      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70, 71):
+        pos = ord(rules[idx])-55
+      else:
+        pos = int(rules[idx])
       idx += 1
       c = str(rules[idx])
       plain = plain[0:pos] + c + plain[pos+1:]
     elif rule == "'":
       idx += 1
-      pos = int(rules[idx])
+      pos = int(rules[idx],16)
       plain = plain[:pos]
     elif rule == 's':
       idx += 1
@@ -135,56 +157,83 @@ def transform(plain, rules):
         buf += c + c
       plain = buf
     elif rule == 'k':
-      plain = plain[1] + plain[0] + plain [2:]
+      if len(plain) > 2:
+        plain = plain[1] + plain[0] + plain [2:]
+      elif len(plain) == 2:
+        plain = plain[1] + plain[0]
     elif rule == 'K':
-      plain = plain[:-2] + plain[-1] + plain[-2]
+      if len(plain) > 2:
+        plain = plain[:-2] + plain[-1] + plain[-2]
+      elif len(plain) == 2:
+        plain = plain[-1] + plain[-2]
     elif rule == '*':
       buf = list(plain)
       idx += 1
-      pos1 = int(rules[idx])
+      pos1 = int(rules[idx], 16)
       idx += 1
-      pos2 = int(rules[idx])
-      x = plain[pos1]
-      y = plain[pos2]
-      buf[pos1] = y
-      buf[pos2] = x
+      pos2 = int(rules[idx], 16)
+      if pos1 < len(plain) and pos2 < len(plain):
+        x = plain[pos1]
+        y = plain[pos2]
+        buf[pos1] = y
+        buf[pos2] = x
       plain = ''.join(buf)
     elif rule == 'L':
       buf = list(plain)
       idx += 1
-      pos = int(rules[idx])
-      buf[pos] = chr(int(ord(buf[pos])) << 1)
+      pos = int(rules[idx], 16)
+      if pos < len(buf):
+        buf[pos] = chr(int(ord(buf[pos])) << 1)
       plain = ''.join(buf)
     elif rule == 'R':
       buf = list(plain)
       idx += 1
-      pos = int(rules[idx])
-      buf[pos] = chr(int(ord(buf[pos])) >> 1)
-      plain = ''.join(buf)
+      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
+        pos = ord(rules[idx])-55
+      else:
+        pos = int(rules[idx])
+      if pos < len(buf):
+        buf[pos] = chr(int(ord(buf[pos])) >> 1)
+        plain = ''.join(buf)
     elif rule == '+':
       buf = list(plain)
       idx += 1
-      pos = int(rules[idx])
-      buf[pos] = chr(int(ord(buf[pos])) + 1)
+      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
+        pos = ord(rules[idx])-55
+      else:
+        pos = int(rules[idx])
+      if pos < len(buf):
+        buf[pos] = chr(int(ord(buf[pos])) + 1)
       plain = ''.join(buf)
     elif rule == '-':
       buf = list(plain)
       idx += 1
-      pos = int(rules[idx])
-      buf[pos] = chr(int(ord(buf[pos])) - 1)
-      plain = ''.join(buf)
+      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
+        pos = ord(rules[idx])-55
+      else:
+        pos = int(rules[idx])
+      if pos < len(buf) and pos > 0:
+        buf[pos] = chr(int(ord(buf[pos])) - 1)
+        plain = ''.join(buf)
     elif rule == '.':
       buf = list(plain)
       idx += 1
-      pos = int(rules[idx])
+      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
+        pos = ord(rules[idx])-55
+      else:
+        pos = int(rules[idx])
       buf[pos] = buf[pos+1]
       plain = ''.join(buf)
     elif rule == ',':
       buf = list(plain)
       idx += 1
-      pos = int(rules[idx])
-      buf[pos] = buf[pos-1]
-      plain = ''.join(buf)
+      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
+        pos = ord(rules[idx])-55
+      else:
+        pos = int(rules[idx])
+      if pos < len(buf) and pos > 0:
+        buf[pos] = buf[pos-1]
+        plain = ''.join(buf)
     elif rule == 'y':
       idx += 1
       pos = int(rules[idx])
@@ -206,8 +255,11 @@ def run_rules(plain):
   if args.rule_file:
     with open(args.rule_file) as rule_file:
       for rules in rule_file:
-        rules = rules.rstrip()
-        if rules:
+	## we aggresively strip here. Make sure lines end with a space to make up for that
+        rules = rules.rstrip()+" "
+        if rules and rules[0] != '#':
+          if args.debug:
+              print("rules: %s" % (rules))
           transform(plain, rules)
   ## Use stdin otherwise
   else:
