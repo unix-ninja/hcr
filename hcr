@@ -48,6 +48,8 @@ def transform(plain, rules):
       elif len(plain) == 1:
         plain = plain[0].lower()
       pass
+    elif rule == 'E':
+      plain = plain.title()
     elif rule == 't':
       plain = ''.join(c.lower() if c.isupper() else c.upper() for c in plain)
     elif rule == 'T':
