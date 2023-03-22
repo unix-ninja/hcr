@@ -23,6 +23,7 @@ def transform(plain, rules):
   plain = plain.rstrip()
   memorize = ""
   idx = 0
+  alphanum_list = list('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
   while idx < len(rules):
     rule = rules[idx]
     if rule == ':':
@@ -54,7 +55,7 @@ def transform(plain, rules):
       plain = ''.join(c.lower() if c.isupper() else c.upper() for c in plain)
     elif rule == 'T':
       idx += 1
-      pos = int(rules[idx], 16)
+      pos = alphanum_list.index(rules[idx].upper())
       if pos < len(plain):
         plain = plain[:pos] + ''.join(c.lower() if c.isupper() else c.upper() for c in plain[pos]) + plain[pos+1:]
     elif rule == 'r':
@@ -64,7 +65,7 @@ def transform(plain, rules):
     elif rule == 'p':
       buf = plain
       idx += 1
-      itr = int(rules[idx])
+      itr = alphanum_list.index(rules[idx].upper())
       for i in range(itr):
         plain = plain + buf
     elif rule == 'f':
@@ -89,45 +90,36 @@ def transform(plain, rules):
       plain = plain[:-1]
     elif rule == 'D':
       idx += 1
-      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
-        pos = ord(rules[idx])-55
-      else:
-        pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       if pos < len(plain):
         plain = plain[:pos] + plain[pos+1:]
     elif rule == 'x':
       idx += 1
-      pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       idx += 1
-      count = int(rules[idx])
-      plain = plain[pos:count]
+      count = alphanum_list.index(rules[idx].upper())
+      plain = plain[0:pos] + plain[pos+count:]
     elif rule == 'O':
       idx += 1
-      pos = int(rules[idx], 16)
+      pos = alphanum_list.index(rules[idx].upper())
       idx += 1
-      count = int(rules[idx], 16)
+      count = alphanum_list.index(rules[idx].upper())
       plain = plain[0:pos] + plain[pos+count:]
     elif rule == 'i':
       idx += 1
-      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
-        pos = ord(rules[idx])-55
-      else:
-        pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       idx += 1
       c = str(rules[idx])
       plain = plain[0:pos] + c + plain[pos:]
     elif rule == 'o':
       idx += 1
-      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70, 71):
-        pos = ord(rules[idx])-55
-      else:
-        pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       idx += 1
       c = str(rules[idx])
       plain = plain[0:pos] + c + plain[pos+1:]
     elif rule == "'":
       idx += 1
-      pos = int(rules[idx],16)
+      pos = alphanum_list.index(rules[idx].upper())
       plain = plain[:pos]
     elif rule == 's':
       idx += 1
@@ -142,14 +134,14 @@ def transform(plain, rules):
     elif rule == 'z':
       buf = plain
       idx += 1
-      itr = int(rules[idx])
+      itr = alphanum_list.index(rules[idx].upper())
       c = plain[0:1]
       for i in range(itr):
         plain = c + plain
     elif rule == 'Z':
       buf = plain
       idx += 1
-      itr = int(rules[idx])
+      itr = alphanum_list.index(rules[idx].upper())
       c = plain[-1:]
       for i in range(itr):
         plain = plain + c
@@ -171,9 +163,9 @@ def transform(plain, rules):
     elif rule == '*':
       buf = list(plain)
       idx += 1
-      pos1 = int(rules[idx], 16)
+      pos1 = alphanum_list.index(rules[idx].upper())
       idx += 1
-      pos2 = int(rules[idx], 16)
+      pos2 = alphanum_list.index(rules[idx].upper())
       if pos1 < len(plain) and pos2 < len(plain):
         x = plain[pos1]
         y = plain[pos2]
@@ -183,67 +175,53 @@ def transform(plain, rules):
     elif rule == 'L':
       buf = list(plain)
       idx += 1
-      pos = int(rules[idx], 16)
+      pos = alphanum_list.index(rules[idx].upper())
       if pos < len(buf):
         buf[pos] = chr(int(ord(buf[pos])) << 1)
       plain = ''.join(buf)
     elif rule == 'R':
       buf = list(plain)
       idx += 1
-      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
-        pos = ord(rules[idx])-55
-      else:
-        pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       if pos < len(buf):
         buf[pos] = chr(int(ord(buf[pos])) >> 1)
         plain = ''.join(buf)
     elif rule == '+':
       buf = list(plain)
       idx += 1
-      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
-        pos = ord(rules[idx])-55
-      else:
-        pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       if pos < len(buf):
         buf[pos] = chr(int(ord(buf[pos])) + 1)
       plain = ''.join(buf)
     elif rule == '-':
       buf = list(plain)
       idx += 1
-      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
-        pos = ord(rules[idx])-55
-      else:
-        pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       if pos < len(buf) and pos > 0:
         buf[pos] = chr(int(ord(buf[pos])) - 1)
         plain = ''.join(buf)
     elif rule == '.':
       buf = list(plain)
       idx += 1
-      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
-        pos = ord(rules[idx])-55
-      else:
-        pos = int(rules[idx])
-      buf[pos] = buf[pos+1]
-      plain = ''.join(buf)
+      pos = alphanum_list.index(rules[idx].upper())
+      if pos < len(buf)-1 and pos > 0:
+        buf[pos] = buf[pos+1]
+        plain = ''.join(buf)
     elif rule == ',':
       buf = list(plain)
       idx += 1
-      if ord(rules[idx]) in (65, 66, 67, 68, 69, 70):
-        pos = ord(rules[idx])-55
-      else:
-        pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       if pos < len(buf) and pos > 0:
         buf[pos] = buf[pos-1]
         plain = ''.join(buf)
     elif rule == 'y':
       idx += 1
-      pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       buf = plain[0:pos]
       plain = buf + plain
     elif rule == 'Y':
       idx += 1
-      pos = int(rules[idx])
+      pos = alphanum_list.index(rules[idx].upper())
       buf = plain[-pos:]
       plain = plain + buf
     else:
